@@ -11,10 +11,15 @@ then run : npm run dev
 For Laravel : 
 
 cd bechedhli-backend
+
 composer install
-cp .env.example .env   
+
+cp .env.example .env  
+
 php artisan key:generate
+
 php artisan migrate --seed
+
 php artisan serve --port=8000
 
 # Bechedhli Solar Energy
