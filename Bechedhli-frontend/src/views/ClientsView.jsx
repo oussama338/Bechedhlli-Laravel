@@ -268,7 +268,7 @@ export default function ClientsView({ clients, handlers, addToast }) {
                   ['fa-credit-card', 'N° CIN', c.cin],
                   ['fa-phone', 'Téléphone', c.phone],
                   ['fa-map-pin', 'Adresse', c.address],
-                  ['fa-calendar', 'Client depuis', new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })],
+                  ['fa-calendar', 'Client depuis', new Date(c.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })],
                 ].map(([ic, l, v], i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10 }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(249,115,22,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
