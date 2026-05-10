@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Modal, ConfirmModal } from '../components/Modal';
 import { DEPARTMENTS, ROLES, getAvatarColor, getInitials, formatDA } from '../data';
 
-export default function EmployeesView({ employees, setEmployees, addToast }) {
+export default function EmployeesView({ employees, handlers, addToast }) {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -32,23 +32,32 @@ export default function EmployeesView({ employees, setEmployees, addToast }) {
     setModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.role || !form.dept) { addToast('Veuillez remplir tous les champs obligatoires', 'error'); return; }
-    if (editing) {
-      setEmployees(prev => prev.map(e => e.id === editing.id ? { ...e, ...form, salary: Number(form.salary) } : e));
-      addToast(`${form.name} mis à jour avec succès`, 'success');
-    } else {
-      setEmployees(prev => [...prev, { ...form, id: Date.now(), salary: Number(form.salary) }]);
-      addToast(`${form.name} ajouté avec succès`, 'success');
+    try {
+      const payload = { ...form, salary: Number(form.salary) };
+      if (editing) {
+        await handlers.update(editing.id, payload);
+        addToast(`${form.name} mis à jour avec succès`, 'success');
+      } else {
+        await handlers.add(payload);
+        addToast(`${form.name} ajouté avec succès`, 'success');
+      }
+      setModalOpen(false);
+    } catch {
+      addToast('Erreur lors de l\'enregistrement', 'error');
     }
-    setModalOpen(false);
   };
 
-  const handleDelete = () => {
-    setEmployees(prev => prev.filter(e => e.id !== selected.id));
-    addToast(`${selected.name} supprimé`, 'success');
-    setDeleteOpen(false);
-    setSelected(null);
+  const handleDelete = async () => {
+    try {
+      await handlers.remove(selected.id);
+      addToast(`${selected.name} supprimé`, 'success');
+      setDeleteOpen(false);
+      setSelected(null);
+    } catch {
+      addToast('Erreur lors de la suppression', 'error');
+    }
   };
 
   const statusBadge = (s) => {

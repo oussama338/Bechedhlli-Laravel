@@ -11,8 +11,8 @@ function printBL(bl, client) {
   const w = window.open('', '', 'width=900,height=700');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BL ${bl.id}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;padding:20px;color:#000;font-size:12px}table{width:100%;border-collapse:collapse}.header{text-align:center;margin-bottom:15px}.header h1{font-size:14px;font-weight:bold;letter-spacing:1px}.header h2{font-size:18px;font-weight:bold;margin:6px 0}.info-grid{display:grid;grid-template-columns:120px 1fr;gap:4px 12px;margin:10px 0 15px}.info-grid .label{font-weight:bold;font-size:11px}.info-grid .value{font-size:12px}.bl-header{display:grid;grid-template-columns:1fr 100px 100px 1fr;gap:8px;align-items:center;margin:10px 0;border-bottom:2px solid #000;padding-bottom:8px}.items-table th{background:#f0f0f0;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.signatures{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:30px;padding-top:15px}.sig-box{text-align:center;padding:30px 10px;border-top:1px solid #999}.sig-box p{font-size:10px;color:#555;margin-top:8px}.footer{text-align:center;margin-top:20px;padding-top:10px;border-top:1px solid #ccc;font-size:10px;color:#666}@media print{body{padding:10px}}</style></head><body>
     <div class="header"><h1>BECHEDHLI SOLAR ENERGY</h1><h2>BON DE LIVRAISON</h2></div>
-    <div class="info-grid"><span class="label">Client :</span><span class="value">${client.name}</span><span class="label">Adresse :</span><span class="value">${client.address}</span><span class="label">CIN :</span><span class="value">${client.cin}</span><span class="label">Puissance :</span><span class="value">${bl.puissance}</span><span class="label">Ref STEG :</span><span class="value">${bl.refSteg}</span><span class="label">TEL :</span><span class="value">${client.phone}</span></div>
-    <div class="bl-header"><div><strong>Bon de livraison</strong><br/>${bl.id}</div><div style="text-align:center"><strong>Tri ou Mono</strong><br/>${bl.type}</div><div style="text-align:center"><strong>Date</strong><br/>${new Date(bl.date).toLocaleDateString('fr-FR')}</div><div style="text-align:right"><strong>TRANSPORTEUR</strong><br/>${bl.transporteur.name}<br/>${bl.transporteur.matricule}</div></div>
+    <div class="info-grid"><span class="label">Client :</span><span class="value">${client.name}</span><span class="label">Adresse :</span><span class="value">${client.address}</span><span class="label">CIN :</span><span class="value">${client.cin}</span><span class="label">Puissance :</span><span class="value">${bl.puissance}</span><span class="label">Ref STEG :</span><span class="value">${bl.ref_steg}</span><span class="label">TEL :</span><span class="value">${client.phone}</span></div>
+    <div class="bl-header"><div><strong>Bon de livraison</strong><br/>${bl.id}</div><div style="text-align:center"><strong>Tri ou Mono</strong><br/>${bl.type}</div><div style="text-align:center"><strong>Date</strong><br/>${new Date(bl.date).toLocaleDateString('fr-FR')}</div><div style="text-align:right"><strong>TRANSPORTEUR</strong><br/>${bl.transporteur_name}<br/>${bl.transporteur_matricule}</div></div>
     <table class="items-table"><thead><tr><th style="border:1px solid #333;padding:6px 10px;width:40px;text-align:center">N°</th><th style="border:1px solid #333;padding:6px 10px">Désignation</th><th style="border:1px solid #333;padding:6px 10px">Marque / Réf</th><th style="border:1px solid #333;padding:6px 10px;width:100px">Catégorie</th><th style="border:1px solid #333;padding:6px 10px;width:60px;text-align:center">Qte</th></tr></thead><tbody>${itemsHTML}</tbody></table>
     <div class="signatures"><div class="sig-box">Cachet et Signature<br/>Responsable Magasin</div><div class="sig-box">Cachet et Signature<br/>Magasinier</div><div class="sig-box">Signature<br/>Livreur</div></div>
     <div class="footer"><p style="font-weight:bold;margin-bottom:4px">BECHEDHLI SOLAR ENERGY</p><p>109 Rue Misk Ellil Cité Ilmi Mhamdia — 1145 Ben Arous</p><p>GSM : 96 903 425 — MF : 1952714/G</p></div>
@@ -21,18 +21,17 @@ function printBL(bl, client) {
   setTimeout(() => { w.print(); }, 300);
 }
 
-export default function LivraisonView({ bls, setBls, clients, addToast }) {
+export default function LivraisonView({ bls, handlers, clients, addToast }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [detailOpen, setDetailOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [nextNum, setNextNum] = useState(43);
 
   const emptyForm = {
-    clientId: '', type: 'Mono', date: new Date().toISOString().split('T')[0],
-    puissance: '', refSteg: '', transportName: '', transportMat: '',
+    client_id: '', type: 'Mono', date: new Date().toISOString().split('T')[0],
+    puissance: '', ref_steg: '', transporteur_name: '', transporteur_matricule: '',
     items: [{ n: 1, des: '', marque: '', cat: '', qty: 1, note: '' }]
   };
   const [form, setForm] = useState(emptyForm);
@@ -40,7 +39,7 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
   const getClient = (id) => clients.find(c => c.id === id);
 
   const filtered = useMemo(() => bls.filter(bl => {
-    const cl = getClient(bl.clientId);
+    const cl = getClient(bl.client_id);
     if (search && !(bl.id.toLowerCase().includes(search.toLowerCase()) || (cl && cl.name.toLowerCase().includes(search.toLowerCase())))) return false;
     if (statusFilter === 'delivered' && bl.status !== 'delivered') return false;
     if (statusFilter === 'waiting' && bl.status !== 'waiting') return false;
@@ -55,8 +54,9 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
     invoiced: bls.filter(b => b.invoiced).length,
   }), [bls]);
 
-  const openCreate = () => {
-    setForm({ ...emptyForm, date: new Date().toISOString().split('T')[0] });
+  const openCreate = async () => {
+    const res = await handlers.nextId();
+    setForm({ ...emptyForm, date: new Date().toISOString().split('T')[0], id: res });
     setCreateOpen(true);
   };
 
@@ -74,8 +74,8 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
     }
   };
 
-  const handleSave = () => {
-    if (!form.clientId || !form.puissance) {
+  const handleSave = async () => {
+    if (!form.client_id || !form.puissance) {
       addToast('Veuillez sélectionner un client et remplir la puissance', 'error');
       return;
     }
@@ -84,41 +84,48 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
       addToast('Ajoutez au moins un article', 'error');
       return;
     }
-    const newBL = {
-      id: `BL${String(nextNum).padStart(5, '0')}`,
-      clientId: Number(form.clientId),
-      type: form.type,
-      date: form.date,
-      status: 'waiting',
-      invoiced: false,
-      puissance: form.puissance,
-      refSteg: form.refSteg,
-      transporteur: { name: form.transportName, matricule: form.transportMat },
-      items: validItems
-    };
-    setBls(prev => [...prev, newBL]);
-    setNextNum(n => n + 1);
-    setCreateOpen(false);
-    addToast(`Bon ${newBL.id} créé avec succès`);
+    try {
+      await handlers.add({
+        ...form,
+        client_id: Number(form.client_id),
+        items: validItems,
+      });
+      setCreateOpen(false);
+      addToast('Bon de livraison créé avec succès');
+    } catch {
+      addToast('Erreur lors de la création', 'error');
+    }
   };
 
-  const handleDeliver = () => {
-    setBls(prev => prev.map(b => b.id === selected.id ? { ...b, status: 'delivered' } : b));
-    setSelected(s => ({ ...s, status: 'delivered' }));
-    addToast(`${selected.id} marqué comme livré`);
+  const handleDeliver = async () => {
+    try {
+      const dn = await handlers.markDelivered(selected.id);
+      setSelected(dn);
+      addToast(`${selected.id} marqué comme livré`);
+    } catch {
+      addToast('Erreur', 'error');
+    }
   };
 
-  const handleInvoice = () => {
-    setBls(prev => prev.map(b => b.id === selected.id ? { ...b, invoiced: true } : b));
-    setSelected(s => ({ ...s, invoiced: true }));
-    addToast(`Facture générée pour ${selected.id}`);
+  const handleInvoice = async () => {
+    try {
+      const dn = await handlers.markInvoiced(selected.id);
+      setSelected(dn);
+      addToast(`Facture générée pour ${selected.id}`);
+    } catch {
+      addToast('Erreur', 'error');
+    }
   };
 
-  const handleDelete = () => {
-    setBls(prev => prev.filter(b => b.id !== selected.id));
-    addToast(`${selected.id} supprimé`);
-    setDeleteOpen(false);
-    setDetailOpen(false);
+  const handleDelete = async () => {
+    try {
+      await handlers.remove(selected.id);
+      addToast(`${selected.id} supprimé`);
+      setDeleteOpen(false);
+      setDetailOpen(false);
+    } catch {
+      addToast('Erreur lors de la suppression', 'error');
+    }
   };
 
   const statusBadge = (bl) => {
@@ -161,7 +168,7 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
             <tbody>
               {filtered.length === 0 ? <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--fg-muted)' }}>Aucun bon trouvé</td></tr> :
                 filtered.map((bl, i) => {
-                  const cl = getClient(bl.clientId);
+                  const cl = getClient(bl.client_id);
                   return (
                     <tr key={bl.id} onClick={() => { setSelected(bl); setDetailOpen(true); }} style={{ animation: `slideUp .3s ease-out ${i * .03}s both` }}>
                       <td><span style={{ fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'rgba(249,115,22,.1)', color: '#F97316' }}>{bl.id}</span></td>
@@ -169,7 +176,7 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
                       <td><span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, background: bl.type === 'Mono' ? 'rgba(59,130,246,.1)' : 'rgba(139,92,246,.1)', color: bl.type === 'Mono' ? '#3B82F6' : '#8B5CF6', fontWeight: 600 }}>{bl.type}</span></td>
                       <td style={{ fontSize: 13, color: '#94A3B8' }}>{bl.puissance}</td>
                       <td style={{ fontSize: 13, color: '#94A3B8' }}>{new Date(bl.date).toLocaleDateString('fr-FR')}</td>
-                      <td style={{ fontSize: 12, color: 'var(--fg-muted)' }}><div>{bl.transporteur.name}</div><div style={{ fontSize: 11, opacity: .7 }}>{bl.transporteur.matricule}</div></td>
+                      <td style={{ fontSize: 12, color: 'var(--fg-muted)' }}><div>{bl.transporteur_name}</div><div style={{ fontSize: 11, opacity: .7 }}>{bl.transporteur_matricule}</div></td>
                       <td><span style={{ fontWeight: 700, fontSize: 14 }}>{bl.items.length}</span></td>
                       <td>{statusBadge(bl)}</td>
                       <td><div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
@@ -186,7 +193,7 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
 
       <Modal isOpen={detailOpen} onClose={() => { setDetailOpen(false); setSelected(null); }} title={`Bon de Livraison ${selected?.id || ''}`} width={780}>
         {selected && (() => {
-          const cl = getClient(selected.clientId);
+          const cl = getClient(selected.client_id);
           const catColors = { panneau: '#F97316', onduleur: '#3B82F6', structure: '#10B981', fixation: '#F59E0B', 'câblage': '#8B5CF6', 'chemin de câble': '#06B6D4', 'Tube IRO': '#EC4899', coffret: '#6366F1', protection: '#EF4444', accessoires: '#14B8A6', divers: '#94A3B8' };
           return (
             <div>
@@ -203,7 +210,7 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 20 }}>
-                {[['fa-id-card', 'CIN', cl?.cin], ['fa-bolt', 'Puissance', selected.puissance], ['fa-hashtag', 'Ref STEG', selected.refSteg], ['fa-phone', 'Téléphone', cl?.phone], ['fa-solar-panel', 'Type', selected.type], ['fa-calendar', 'Date', new Date(selected.date).toLocaleDateString('fr-FR')], ['fa-truck', 'Transporteur', selected.transporteur.name], ['fa-car', 'Matricule', selected.transporteur.matricule], ['fa-box', 'Nb Articles', selected.items.length]].map(([ic, l, v], i) => (
+                {[['fa-id-card', 'CIN', cl?.cin], ['fa-bolt', 'Puissance', selected.puissance], ['fa-hashtag', 'Ref STEG', selected.ref_steg], ['fa-phone', 'Téléphone', cl?.phone], ['fa-solar-panel', 'Type', selected.type], ['fa-calendar', 'Date', new Date(selected.date).toLocaleDateString('fr-FR')], ['fa-truck', 'Transporteur', selected.transporteur_name], ['fa-car', 'Matricule', selected.transporteur_matricule], ['fa-box', 'Nb Articles', selected.items.length]].map(([ic, l, v], i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.02)', borderRadius: 10 }}>
                     <i className={`fa-solid ${ic}`} style={{ color: 'var(--fg-muted)', fontSize: 12, width: 16 }} /><div><p style={{ fontSize: 10, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{l}</p><p style={{ fontSize: 13, fontWeight: 500, marginTop: 1 }}>{v || '—'}</p></div>
                   </div>
@@ -241,17 +248,17 @@ export default function LivraisonView({ bls, setBls, clients, addToast }) {
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Nouveau Bon de Livraison" width={720}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div><label style={lbl('Client *')} /><select className="input-field" value={form.clientId} onChange={e => setForm({ ...form, clientId: e.target.value })}><option value="">Sélectionner...</option>{clients.map(c => <option key={c.id} value={c.id} style={{ background: '#131B2E' }}>{c.name}</option>)}</select></div>
+            <div><label style={lbl('Client *')} /><select className="input-field" value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}><option value="">Sélectionner...</option>{clients.map(c => <option key={c.id} value={c.id} style={{ background: '#131B2E' }}>{c.name}</option>)}</select></div>
             <div><label style={lbl('Type')} /><select className="input-field" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}><option value="Mono">Mono</option><option value="Tri">Tri</option></select></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <div><label style={lbl('Puissance *')} /><input className="input-field" value={form.puissance} onChange={e => setForm({ ...form, puissance: e.target.value })} placeholder="Ex: 3,240 kwc" /></div>
-            <div><label style={lbl('Ref STEG')} /><input className="input-field" value={form.refSteg} onChange={e => setForm({ ...form, refSteg: e.target.value })} placeholder="Ex: 20081 289 0" /></div>
+            <div><label style={lbl('Ref STEG')} /><input className="input-field" value={form.ref_steg} onChange={e => setForm({ ...form, ref_steg: e.target.value })} placeholder="Ex: 20081 289 0" /></div>
             <div><label style={lbl('Date')} /><input className="input-field" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div><label style={lbl('Transporteur')} /><input className="input-field" value={form.transportName} onChange={e => setForm({ ...form, transportName: e.target.value })} placeholder="Nom du transporteur" /></div>
-            <div><label style={lbl('Matricule')} /><input className="input-field" value={form.transportMat} onChange={e => setForm({ ...form, transportMat: e.target.value })} placeholder="Ex: 213 Tunis 6198" /></div>
+            <div><label style={lbl('Transporteur')} /><input className="input-field" value={form.transporteur_name} onChange={e => setForm({ ...form, transporteur_name: e.target.value })} placeholder="Nom du transporteur" /></div>
+            <div><label style={lbl('Matricule')} /><input className="input-field" value={form.transporteur_matricule} onChange={e => setForm({ ...form, transporteur_matricule: e.target.value })} placeholder="Ex: 213 Tunis 6198" /></div>
           </div>
 
           <div>

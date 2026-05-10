@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Modal, ConfirmModal } from '../components/Modal';
 import { CATEGORIES, LOCATIONS, getStockStatus, formatDA, CAT_ICONS, CAT_COLORS } from '../data';
 
-export default function StockView({ stock, setStock, addToast }) {
+export default function StockView({ stock, handlers, addToast }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -36,23 +36,32 @@ export default function StockView({ stock, setStock, addToast }) {
     setModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.category || !form.qty || !form.price) { addToast('Veuillez remplir tous les champs obligatoires', 'error'); return; }
-    if (editing) {
-      setStock(prev => prev.map(i => i.id === editing.id ? { ...i, ...form, qty: Number(form.qty), minQty: Number(form.minQty), price: Number(form.price) } : i));
-      addToast(`${form.name} mis à jour`, 'success');
-    } else {
-      setStock(prev => [...prev, { ...form, id: Date.now(), qty: Number(form.qty), minQty: Number(form.minQty), price: Number(form.price) }]);
-      addToast(`${form.name} ajouté au stock`, 'success');
+    try {
+      const payload = { ...form, qty: Number(form.qty), minQty: Number(form.minQty), price: Number(form.price) };
+      if (editing) {
+        await handlers.update(editing.id, payload);
+        addToast(`${form.name} mis à jour`, 'success');
+      } else {
+        await handlers.add(payload);
+        addToast(`${form.name} ajouté au stock`, 'success');
+      }
+      setModalOpen(false);
+    } catch {
+      addToast('Erreur lors de l\'enregistrement', 'error');
     }
-    setModalOpen(false);
   };
 
-  const handleDelete = () => {
-    setStock(prev => prev.filter(i => i.id !== selected.id));
-    addToast(`${selected.name} supprimé du stock`, 'success');
-    setDeleteOpen(false);
-    setSelected(null);
+  const handleDelete = async () => {
+    try {
+      await handlers.remove(selected.id);
+      addToast(`${selected.name} supprimé du stock`, 'success');
+      setDeleteOpen(false);
+      setSelected(null);
+    } catch {
+      addToast('Erreur lors de la suppression', 'error');
+    }
   };
 
   const stockBadge = (item) => {

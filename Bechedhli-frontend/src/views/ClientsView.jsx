@@ -4,7 +4,7 @@ import { COMPONENT_CATALOG, getClientStats, formatDA } from '../data';
 
 const LBL = { fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', marginBottom: 6, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' };
 
-export default function ClientsView({ clients, setClients, addToast }) {
+export default function ClientsView({ clients, handlers, addToast }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
@@ -34,26 +34,34 @@ export default function ClientsView({ clients, setClients, addToast }) {
   const openEditClient = (c) => { setEditing(c); setClientForm({ name: c.name, cin: c.cin, phone: c.phone, address: c.address }); setFormOpen(true); };
   const openDetail = (c) => { setSelected(c); setDetailOpen(true); };
 
-  const handleSaveClient = () => {
+  const handleSaveClient = async () => {
     if (!clientForm.name || !clientForm.cin) { addToast('Le nom et le N° CIN sont obligatoires', 'error'); return; }
     if (clientForm.cin.length < 10) { addToast('Le N° CIN doit contenir au moins 10 caractères', 'error'); return; }
-    if (editing) {
-      setClients(prev => prev.map(c => c.id === editing.id ? { ...c, ...clientForm } : c));
-      addToast(`${clientForm.name} mis à jour`, 'success');
-    } else {
-      setClients(prev => [...prev, { ...clientForm, id: Date.now(), orders: [], createdAt: new Date().toISOString().split('T')[0] }]);
-      addToast(`${clientForm.name} ajouté avec succès`, 'success');
+    try {
+      if (editing) {
+        await handlers.update(editing.id, clientForm);
+        addToast(`${clientForm.name} mis à jour`, 'success');
+      } else {
+        await handlers.add(clientForm);
+        addToast(`${clientForm.name} ajouté avec succès`, 'success');
+      }
+      setFormOpen(false);
+    } catch {
+      addToast('Erreur lors de l\'enregistrement', 'error');
     }
-    setFormOpen(false);
   };
 
-  const handleDeleteClient = () => {
-    setClients(prev => prev.filter(c => c.id !== selected.id));
-    addToast(`${selected.name} supprimé`, 'success');
-    setDeleteOpen(false); setSelected(null); setDetailOpen(false);
+  const handleDeleteClient = async () => {
+    try {
+      await handlers.remove(selected.id);
+      addToast(`${selected.name} supprimé`, 'success');
+      setDeleteOpen(false); setSelected(null); setDetailOpen(false);
+    } catch {
+      addToast('Erreur lors de la suppression', 'error');
+    }
   };
 
-  const handleNewOrder = () => {
+  const handleNewOrder = async () => {
     const validLines = orderLines.filter(l => l.component && l.qty > 0);
     if (validLines.length === 0) { addToast('Ajoutez au moins un composant', 'error'); return; }
     const items = validLines.map(l => `${l.component} x${l.qty}`);
@@ -61,31 +69,45 @@ export default function ClientsView({ clients, setClients, addToast }) {
       const cat = COMPONENT_CATALOG.find(c => c.label === l.component);
       return s + (cat ? cat.price * Number(l.qty) : 0);
     }, 0);
-    const newOrder = { id: Date.now(), items, total, received: false, receivedDate: null, orderDate: new Date().toISOString().split('T')[0] };
-    const updated = { ...selected, orders: [...selected.orders, newOrder] };
-    setClients(prev => prev.map(c => c.id === selected.id ? updated : c));
-    setSelected(updated);
-    setOrderFormOpen(false);
-    setOrderLines([{ component: '', qty: 1 }]);
-    addToast('Commande ajoutée avec succès', 'success');
+    try {
+      const order = await handlers.addOrder(selected.id, {
+        items, total, order_date: new Date().toISOString().split('T')[0],
+      });
+      setSelected(prev => ({ ...prev, orders: [...(prev.orders || []), order] }));
+      setOrderFormOpen(false);
+      setOrderLines([{ component: '', qty: 1 }]);
+      addToast('Commande ajoutée avec succès', 'success');
+    } catch {
+      addToast('Erreur lors de la création de la commande', 'error');
+    }
   };
 
-  const handleMarkReceived = () => {
+  const handleMarkReceived = async () => {
     if (!selectedOrder) return;
-    const updatedOrders = selected.orders.map(o => o.id === selectedOrder.id ? { ...o, received: true, receivedDate: new Date().toISOString().split('T')[0] } : o);
-    const updated = { ...selected, orders: updatedOrders };
-    setClients(prev => prev.map(c => c.id === selected.id ? updated : c));
-    setSelected(updated);
-    setMarkOpen(false); setSelectedOrder(null);
-    addToast('Commande marquée comme reçue', 'success');
+    try {
+      const order = await handlers.markOrderReceived(selectedOrder.id);
+      setSelected(prev => ({
+        ...prev,
+        orders: (prev.orders || []).map(o => o.id === selectedOrder.id ? order : o),
+      }));
+      setMarkOpen(false); setSelectedOrder(null);
+      addToast('Commande marquée comme reçue', 'success');
+    } catch {
+      addToast('Erreur lors de la confirmation', 'error');
+    }
   };
 
-  const handleDeleteOrder = (orderId) => {
-    const updatedOrders = selected.orders.filter(o => o.id !== orderId);
-    const updated = { ...selected, orders: updatedOrders };
-    setClients(prev => prev.map(c => c.id === selected.id ? updated : c));
-    setSelected(updated);
-    addToast('Commande supprimée', 'success');
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      await handlers.removeOrder(selected.id, orderId);
+      setSelected(prev => ({
+        ...prev,
+        orders: (prev.orders || []).filter(o => o.id !== orderId),
+      }));
+      addToast('Commande supprimée', 'success');
+    } catch {
+      addToast('Erreur lors de la suppression', 'error');
+    }
   };
 
   const orderTotal = useMemo(() =>
