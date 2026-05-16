@@ -105,11 +105,12 @@ export const LOCATIONS = ['Entrepôt A', 'Entrepôt B', 'Entrepôt C', 'Entrepô
 const AVATAR_COLORS = ['#F97316','#3B82F6','#10B981','#8B5CF6','#EC4899','#06B6D4','#F59E0B','#EF4444','#6366F1','#14B8A6','#F43F5E','#84CC16'];
 export const getAvatarColor = (id) => AVATAR_COLORS[(id - 1) % AVATAR_COLORS.length];
 export const getInitials = (name) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-export const formatDA = (n) => new Intl.NumberFormat('fr-DZ').format(n) + ' TND';
+export const formatDA = (n) => { const val = Number(n) || 0; return new Intl.NumberFormat('fr-DZ').format(val) + ' TND'; };
 export const getStockStatus = (item) => {
+  const mq = item.min_qty || item.minQty || 0;
   if (item.qty === 0) return 'empty';
-  if (item.qty <= item.minQty) return 'low';
-  if (item.qty <= item.minQty * 1.5) return 'warning';
+  if (item.qty <= mq) return 'low';
+  if (item.qty <= mq * 1.5) return 'warning';
   return 'normal';
 };
 export const getClientStats = (orders) => {

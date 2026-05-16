@@ -28,14 +28,14 @@ export default function EmployeesView({ employees, handlers, addToast }) {
 
   const openEdit = (emp) => {
     setEditing(emp);
-    setForm({ name: emp.name, role: emp.role, dept: emp.dept, status: emp.status, phone: emp.phone, email: emp.email, salary: String(emp.salary), joinDate: emp.joinDate });
+    setForm({ name: emp.name, role: emp.role, dept: emp.dept, status: emp.status, phone: emp.phone, email: emp.email, salary: String(emp.salary), joinDate: emp.join_date });
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name || !form.role || !form.dept) { addToast('Veuillez remplir tous les champs obligatoires', 'error'); return; }
     try {
-      const payload = { ...form, salary: Number(form.salary) };
+      const payload = { name: form.name, role: form.role, dept: form.dept, status: form.status, phone: form.phone, email: form.email, salary: Number(form.salary) || 0, join_date: form.joinDate };
       if (editing) {
         await handlers.update(editing.id, payload);
         addToast(`${form.name} mis à jour avec succès`, 'success');
@@ -212,8 +212,8 @@ export default function EmployeesView({ employees, handlers, addToast }) {
                 ["Téléphone", selected.phone, 'fa-phone'],
                 ["Email", selected.email, 'fa-envelope'],
                 ["Salaire", formatDA(selected.salary), 'fa-money-bill'],
-                ["Date d'embauche", new Date(selected.joinDate).toLocaleDateString('fr-FR'), 'fa-calendar'],
-                ["Ancienneté", `${Math.floor((Date.now() - new Date(selected.joinDate).getTime()) / (1000*60*60*24*365))} ans`, 'fa-clock'],
+                ["Date d'embauche", new Date(selected.join_date).toLocaleDateString('fr-FR'), 'fa-calendar'],
+                ["Ancienneté", `${Math.floor((Date.now() - new Date(selected.join_date).getTime()) / (1000*60*60*24*365))} ans`, 'fa-clock'],
               ].map(([label, val, icon], i) => (
                 <div key={i} style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10 }}>
                   <p style={{ fontSize: 11, color: 'var(--fg-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>

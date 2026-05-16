@@ -32,14 +32,14 @@ export default function StockView({ stock, handlers, addToast }) {
 
   const openEdit = (item) => {
     setEditing(item);
-    setForm({ name: item.name, category: item.category, qty: String(item.qty), minQty: String(item.minQty), price: String(item.price), supplier: item.supplier, location: item.location });
+    setForm({ name: item.name, category: item.category, qty: String(item.qty), minQty: String(item.min_qty), price: String(item.price), supplier: item.supplier, location: item.location });
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name || !form.category || !form.qty || !form.price) { addToast('Veuillez remplir tous les champs obligatoires', 'error'); return; }
     try {
-      const payload = { ...form, qty: Number(form.qty), minQty: Number(form.minQty), price: Number(form.price) };
+      const payload = { name: form.name, category: form.category, qty: Number(form.qty) || 0, min_qty: Number(form.minQty) || 0, price: Number(form.price) || 0, supplier: form.supplier, location: form.location };
       if (editing) {
         await handlers.update(editing.id, payload);
         addToast(`${form.name} mis à jour`, 'success');
@@ -97,8 +97,8 @@ export default function StockView({ stock, handlers, addToast }) {
           <i className="fa-solid fa-triangle-exclamation" style={{ color: '#EF4444', fontSize: 16 }} />
           <span style={{ fontSize: 13, flex: 1 }}>
             <strong style={{ color: '#EF4444' }}>{lowStockItems.length} produit(s)</strong> nécessitent un réapprovisionnement immédiat :
-            {lowStockItems.slice(0, 3).map((item, i) => (
-              <span key={item.id} style={{ color: '#94A3B8' }}>{i > 0 ? ', ' : ' '}{item.name} ({item.qty}/{item.minQty})</span>
+              {lowStockItems.slice(0, 3).map((item, i) => (
+              <span key={item.id} style={{ color: '#94A3B8' }}>{i > 0 ? ', ' : ' '}{item.name} ({item.qty}/{item.min_qty})</span>
             ))}
             {lowStockItems.length > 3 && <span style={{ color: '#94A3B8' }}> et {lowStockItems.length - 3} autres...</span>}
           </span>
@@ -170,7 +170,7 @@ export default function StockView({ stock, handlers, addToast }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 100 }}>
                           {stockBadge(item)}
                           <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: `${Math.min(100, (item.qty / (item.minQty * 3)) * 100)}%`, background: progressColor(item) }} />
+                            <div className="progress-fill" style={{ width: `${Math.min(100, (item.qty / ((item.min_qty || 1) * 3)) * 100)}%`, background: progressColor(item) }} />
                           </div>
                         </div>
                       </td>
@@ -212,10 +212,10 @@ export default function StockView({ stock, handlers, addToast }) {
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Stock</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'Space Grotesk', color: progressColor(item) }}>{item.qty} / min {item.minQty}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'Space Grotesk', color: progressColor(item) }}>{item.qty} / min {item.min_qty}</span>
                   </div>
                   <div className="progress-bar" style={{ height: 8 }}>
-                    <div className="progress-fill" style={{ width: `${Math.min(100, (item.qty / (item.minQty * 3)) * 100)}%`, background: `linear-gradient(90deg, ${progressColor(item)}, ${progressColor(item)}88)` }} />
+                    <div className="progress-fill" style={{ width: `${Math.min(100, (item.qty / ((item.min_qty || 1) * 3)) * 100)}%`, background: `linear-gradient(90deg, ${progressColor(item)}, ${progressColor(item)}88)` }} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTop: '1px solid var(--border)' }}>

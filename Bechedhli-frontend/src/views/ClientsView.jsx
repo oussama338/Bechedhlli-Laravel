@@ -208,7 +208,7 @@ export default function ClientsView({ clients, handlers, addToast }) {
                       <td>
                         {last ? (
                           <div>
-                            <p style={{ fontSize: 13, color: '#94A3B8' }}>{new Date(last.orderDate).toLocaleDateString('fr-FR')}</p>
+                            <p style={{ fontSize: 13, color: '#94A3B8' }}>{new Date(last.order_date).toLocaleDateString('fr-FR')}</p>
                             <p style={{ fontSize: 11, marginTop: 2, color: last.received ? '#10B981' : '#F59E0B' }}>{last.received ? 'Reçue' : 'En attente'}</p>
                           </div>
                         ) : <span style={{ color: 'var(--fg-muted)', fontSize: 13 }}>—</span>}
@@ -319,7 +319,7 @@ export default function ClientsView({ clients, handlers, addToast }) {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: '#94A3B8' }}>#{String(order.id).padStart(4, '0')}</span>
-                            <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Commandé le {new Date(order.orderDate).toLocaleDateString('fr-FR')}</span>
+                            <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Commandé le {new Date(order.order_date).toLocaleDateString('fr-FR')}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {order.received ? (
@@ -343,8 +343,8 @@ export default function ClientsView({ clients, handlers, addToast }) {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: '#F97316' }}>{formatDA(order.total)}</span>
-                          {order.received && order.receivedDate ? (
-                            <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5, color: '#10B981' }}><i className="fa-solid fa-circle-check" style={{ fontSize: 11 }} />Réception : {new Date(order.receivedDate).toLocaleDateString('fr-FR')}</span>
+                          {order.received && order.received_date ? (
+                            <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5, color: '#10B981' }}><i className="fa-solid fa-circle-check" style={{ fontSize: 11 }} />Réception : {new Date(order.received_date).toLocaleDateString('fr-FR')}</span>
                           ) : (
                             <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5, color: '#F59E0B' }}><i className="fa-solid fa-circle-xmark" style={{ fontSize: 11 }} />En attente de réception</span>
                           )}
