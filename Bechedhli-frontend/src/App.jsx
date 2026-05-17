@@ -10,6 +10,7 @@ import EmployeesView from './views/EmployeesView';
 import StockView from './views/StockView';
 import ClientsView from './views/ClientsView';
 import LivraisonView from './views/LivraisonView';
+import StegDocView from './views/StegDocView';
 
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard');
@@ -17,6 +18,7 @@ export default function App() {
   const [stock, setStock] = useState([]);
   const [clients, setClients] = useState([]);
   const [bls, setBls] = useState([]);
+  const [dossiers, setDossiers] = useState([]);
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +37,7 @@ export default function App() {
       api.get('/stock').then(setStock).catch(() => {}),
       api.get('/clients').then(setClients).catch(() => {}),
       api.get('/delivery-notes').then(setBls).catch(() => {}),
+      api.get('/steg-dossiers').then(setDossiers).catch(() => {}),
     ]).then(() => {
       setTimeout(() => setLoading(false), 600);
     });
@@ -134,6 +137,38 @@ export default function App() {
     },
   };
 
+  const stegHandlers = {
+    add: async (data) => {
+      const dossier = await api.post('/steg-dossiers', data);
+      setDossiers(prev => [...prev, dossier]);
+      return dossier;
+    },
+    update: async (id, data) => {
+      const dossier = await api.put(`/steg-dossiers/${id}`, data);
+      setDossiers(prev => prev.map(d => d.id === id ? dossier : d));
+      return dossier;
+    },
+    remove: async (id) => {
+      await api.del(`/steg-dossiers/${id}`);
+      setDossiers(prev => prev.filter(d => d.id !== id));
+    },
+    submit: async (id) => {
+      const dossier = await api.post(`/steg-dossiers/${id}/submit`);
+      setDossiers(prev => prev.map(d => d.id === id ? dossier : d));
+      return dossier;
+    },
+    approve: async (id) => {
+      const dossier = await api.post(`/steg-dossiers/${id}/approve`);
+      setDossiers(prev => prev.map(d => d.id === id ? dossier : d));
+      return dossier;
+    },
+    reject: async (id) => {
+      const dossier = await api.post(`/steg-dossiers/${id}/reject`);
+      setDossiers(prev => prev.map(d => d.id === id ? dossier : d));
+      return dossier;
+    },
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -148,6 +183,7 @@ export default function App() {
           {activeView === 'stock' && <StockView stock={stock} handlers={stockHandlers} addToast={addToast} />}
           {activeView === 'clients' && <ClientsView clients={clients} handlers={clientHandlers} addToast={addToast} />}
           {activeView === 'livraison' && <LivraisonView bls={bls} handlers={blHandlers} clients={clients} addToast={addToast} />}
+          {activeView === 'steg' && <StegDocView dossiers={dossiers} handlers={stegHandlers} clients={clients} addToast={addToast} />}
         </div>
       </main>
       <ToastContainer toasts={toasts} />
