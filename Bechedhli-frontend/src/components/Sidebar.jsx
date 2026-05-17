@@ -9,7 +9,8 @@ const NAV_ITEMS = [
   { id: 'steg', label: 'Suivi STEG', icon: 'fa-file-shield' }
 ];
 
-export default function Sidebar({ activeView, setActiveView }) {
+export default function Sidebar({ activeView, setActiveView, user, onLogout }) {
+  const initials = user?.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase() : 'U';
   return (
     <aside style={{ width: 260, height: '100vh', background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', position: 'fixed', left: 0, top: 0, zIndex: 100 }}>
       <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border)' }}>
@@ -32,12 +33,14 @@ export default function Sidebar({ activeView, setActiveView }) {
       </nav>
       <div style={{ padding: 16, borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
-          <div className="avatar" style={{ width: 38, height: 38, background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: 13 }}>DC</div>
+          <div className="avatar" style={{ width: 38, height: 38, background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: 13 }}>{initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Directeur Commercial</p>
-            <p style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Espace de gestion</p>
+            <p style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'Utilisateur'}</p>
+            <p style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{user?.role || 'Espace de gestion'}</p>
           </div>
-          <i className="fa-solid fa-ellipsis-vertical" style={{ color: 'var(--fg-muted)', fontSize: 12 }} />
+          <button onClick={onLogout} style={{ background: 'none', border: 'none', color: 'var(--fg-muted)', cursor: 'pointer', fontSize: 14, padding: 4 }} title="Déconnexion">
+            <i className="fa-solid fa-right-from-bracket" />
+          </button>
         </div>
       </div>
     </aside>

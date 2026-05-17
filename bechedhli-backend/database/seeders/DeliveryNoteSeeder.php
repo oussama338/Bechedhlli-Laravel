@@ -55,9 +55,12 @@ class DeliveryNoteSeeder extends Seeder
         foreach ($bls as $bl) {
             $items = $bl['items'] ?? [];
             unset($bl['items']);
-            $dn = DeliveryNote::create($bl);
+            $dn = DeliveryNote::updateOrCreate(['id' => $bl['id']], $bl);
             foreach ($items as $item) {
-                $dn->items()->create($item);
+                $dn->items()->updateOrCreate(
+                    ['delivery_note_id' => $dn->id, 'n' => $item['n']],
+                    $item
+                );
             }
         }
     }

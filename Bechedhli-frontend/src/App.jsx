@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import './index.css';
+import { useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import { api } from './api';
 import Loader from './components/Loader';
 import Sidebar from './components/Sidebar';
@@ -13,6 +16,8 @@ import LivraisonView from './views/LivraisonView';
 import StegDocView from './views/StegDocView';
 
 export default function App() {
+  const { isAuthenticated, loading: authLoading, user, logout } = useAuth();
+  const [authPage, setAuthPage] = useState('login');
   const [activeView, setActiveView] = useState('dashboard');
   const [employees, setEmployees] = useState([]);
   const [stock, setStock] = useState([]);
@@ -169,14 +174,19 @@ export default function App() {
     },
   };
 
-  if (loading) return <Loader />;
+  if (loading || authLoading) return <Loader />;
+
+  if (!isAuthenticated) {
+    if (authPage === 'signup') return <SignupPage onSwitchToLogin={() => setAuthPage('login')} />;
+    return <LoginPage onSwitchToSignup={() => setAuthPage('signup')} />;
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <div className="bg-mesh" />
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
+      <Sidebar activeView={activeView} setActiveView={setActiveView} user={user} onLogout={logout} />
       <main style={{ flex: 1, marginLeft: 260, position: 'relative', zIndex: 1, height: '100vh', overflowY: 'auto' }}>
-        <Header activeView={activeView} />
+        <Header activeView={activeView} user={user} onLogout={logout} />
         <div style={{ padding: '28px 32px 40px' }} key={activeView}>
           {activeView === 'dashboard' && <DashboardView employees={employees} stock={stock} clients={clients} />}
           {activeView === 'employees' && <EmployeesView employees={employees} handlers={employeeHandlers} addToast={addToast} />}
