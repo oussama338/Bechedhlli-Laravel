@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import './index.css';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { api } from './api';
+import LoginPage from './pages/LoginPage';
 import Loader from './components/Loader';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,7 +12,8 @@ import StockView from './views/StockView';
 import ClientsView from './views/ClientsView';
 import LivraisonView from './views/LivraisonView';
 
-export default function App() {
+function AppContent() {
+  const { logout, user } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
   const [employees, setEmployees] = useState([]);
   const [stock, setStock] = useState([]);
@@ -19,15 +21,19 @@ export default function App() {
   const [bls, setBls] = useState([]);
   const [toasts, setToasts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem('bechedhli_theme');
+    return stored || 'dark';
+  });
 
-  const addToast = useCallback((message, type = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type, exiting: false }]);
-    setTimeout(() => {
-      setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 300);
-    }, 3000);
-  }, []);
+  useEffect(() => {
+    localStorage.setItem('bechedhli_theme', theme);
+    if (theme === 'light') {
+      document.documentElement.classList.add('theme-light');
+    } else {
+      document.documentElement.classList.remove('theme-light');
+    }
+  }, [theme]);
 
   useEffect(() => {
     Promise.all([
@@ -36,8 +42,17 @@ export default function App() {
       api.get('/clients').then(setClients).catch(() => {}),
       api.get('/delivery-notes').then(setBls).catch(() => {}),
     ]).then(() => {
-      setTimeout(() => setLoading(false), 600);
+      setTimeout(() => setLoading(false), 400);
     });
+  }, []);
+
+  const addToast = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type, exiting: false }]);
+    setTimeout(() => {
+      setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 300);
+    }, 3000);
   }, []);
 
   const employeeHandlers = {
@@ -134,23 +149,47 @@ export default function App() {
     },
   };
 
+  const handleLogout = () => {
+    if (confirm('Êtes-vous sûr de vouloir vous déconnecter?')) {
+      logout();
+    }
+  };
+
   if (loading) return <Loader />;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <div className="bg-mesh" />
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <main style={{ flex: 1, marginLeft: 260, position: 'relative', zIndex: 1, height: '100vh', overflowY: 'auto' }}>
-        <Header activeView={activeView} />
-        <div style={{ padding: '28px 32px 40px' }} key={activeView}>
+      <div style={{ flex: 1, marginLeft: 260, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Header theme={theme} setTheme={setTheme} user={user} onLogout={handleLogout} />
+        <main style={{ flex: 1, overflow: 'auto', padding: '28px 32px 40px' }} key={activeView}>
           {activeView === 'dashboard' && <DashboardView employees={employees} stock={stock} clients={clients} />}
           {activeView === 'employees' && <EmployeesView employees={employees} handlers={employeeHandlers} addToast={addToast} />}
           {activeView === 'stock' && <StockView stock={stock} handlers={stockHandlers} addToast={addToast} />}
           {activeView === 'clients' && <ClientsView clients={clients} handlers={clientHandlers} addToast={addToast} />}
           {activeView === 'livraison' && <LivraisonView bls={bls} handlers={blHandlers} clients={clients} addToast={addToast} />}
-        </div>
-      </main>
+        </main>
+      </div>
       <ToastContainer toasts={toasts} />
     </div>
   );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppWithAuth />
+    </AuthProvider>
+  );
+}
+
+function AppWithAuth() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return <Loader />;
+
+  if (!isAuthenticated) return <LoginPage />;
+
+  return <AppContent />;
 }
