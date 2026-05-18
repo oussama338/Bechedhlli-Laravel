@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import SolarLogo from '../components/SolarLogo';
 
 export default function SignupPage({ onSwitchToLogin }) {
   const { signup } = useAuth();
@@ -35,8 +36,8 @@ export default function SignupPage({ onSwitchToLogin }) {
       </div>
       <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 440 }}>
         <div style={{ textAlign: 'center', marginBottom: 36, animation: 'fadeIn .6s ease-out' }}>
-          <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg, #F97316, #EA580C)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 24px rgba(249,115,22,.3)' }}>
-            <i className="fa-solid fa-user-plus" style={{ fontSize: 24, color: '#fff' }} />
+          <div style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
+            <SolarLogo size={64} />
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--fg)', marginBottom: 4, fontFamily: "'Space Grotesk', sans-serif" }}>Créer un compte</h1>
           <p style={{ fontSize: 14, color: 'var(--fg-muted)' }}>Rejoignez Bechedhli Solar Energy</p>
