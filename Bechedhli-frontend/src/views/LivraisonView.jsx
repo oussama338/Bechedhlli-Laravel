@@ -5,7 +5,7 @@ import bechedhliLogo from '../assets/bechedhli-logo.png';
 const BL_ITEM_CATEGORIES = ['panneau', 'onduleur', 'structure', 'fixation', 'câblage', 'chemin de câble', 'Tube IRO', 'accessoires', 'coffret', 'protection', 'divers'];
 
 const LOGO_URL = window.location.origin + bechedhliLogo;
-const LOGO_HTML = `<img src="${LOGO_URL}" style="height:90px;width:auto" alt="Bechedhli" />`;
+const LOGO_HTML = `<img src="${LOGO_URL}" style="height:190px;width:auto" alt="Bechedhli" />`;
 
 function printBL(bl, client) {
   const itemsHTML = bl.items.map(it => 
